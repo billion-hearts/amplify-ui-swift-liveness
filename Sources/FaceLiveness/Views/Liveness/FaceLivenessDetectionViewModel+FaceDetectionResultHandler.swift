@@ -10,6 +10,9 @@ import SwiftUI
 @_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
 fileprivate let initialFaceDistanceThreshold: CGFloat = 0.32
+// Relaxes the initial face-distance
+// check so faces that are slightly closer to the camera still pass.
+fileprivate let faceDistanceTolerance: CGFloat = 0.1
 
 extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
     func process(newResult: FaceDetectionResult) {
@@ -46,7 +49,8 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
 
             switch livenessState.state {
             case .pendingFacePreparedConfirmation:
-                if face.faceDistance <= ovalMatchChallenge.face.distanceThreshold {
+                let adjustedDistanceThreshold = ovalMatchChallenge.face.distanceThreshold + faceDistanceTolerance
+                if face.faceDistance <= adjustedDistanceThreshold {
                         DispatchQueue.main.async {
                             self.livenessState.awaitingRecording()
                         }
